@@ -1,0 +1,706 @@
+/* ==============================================
+   RESET & BASE
+   ============================================== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0f172a;
+}
+
+/* ==============================================
+   LOADING OVERLAY
+   ============================================== */
+#loading-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0f172a;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.4s ease;
+}
+.loading-content { text-align: center; color: #e2e8f0; }
+.loading-content p { margin-top: 1rem; font-size: 0.9rem; color: #64748b; }
+.spinner {
+  width: 44px; height: 44px;
+  border: 3px solid #1e293b; border-top-color: #f97316;
+  border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==============================================
+   LAYOUT
+   ============================================== */
+/* 100dvh = dynamic viewport height — accounts for mobile browser chrome (URL bar) hiding/showing.
+   Falls back to 100vh on browsers that don't support dvh (older Safari, Chrome < 108). */
+#app { display: flex; height: 100vh; height: 100dvh; }
+
+/* ==============================================
+   SIDEBAR
+   ============================================== */
+#sidebar {
+  width: 290px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  background: #1e293b; color: #e2e8f0;
+  overflow-y: auto; overflow-x: hidden;
+}
+#sidebar::-webkit-scrollbar        { width: 5px; }
+#sidebar::-webkit-scrollbar-track  { background: #1e293b; }
+#sidebar::-webkit-scrollbar-thumb  { background: #334155; border-radius: 3px; }
+
+.sidebar-header {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid #334155; flex-shrink: 0;
+}
+.header-row {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 8px;
+  margin-bottom: 3px;
+}
+.sidebar-header h1 {
+  font-size: 1.1rem; font-weight: 700; margin: 0;
+  color: #f1f5f9; letter-spacing: -0.01em;
+}
+.sidebar-header .subtitle { font-size: 0.72rem; color: #64748b; margin: 0; }
+
+.header-btns {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+}
+#about-btn, #copy-link-btn {
+  background: #334155; border: none;
+  color: #94a3b8; border-radius: 5px;
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.82rem; font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+#about-btn:hover, #copy-link-btn:hover { background: #475569; color: #f1f5f9; }
+#copy-link-btn.copied { background: #166534; color: #86efac; }
+
+#sidebar section { padding: 14px 16px; border-bottom: 1px solid #334155; }
+
+#sidebar h3 {
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #64748b; margin: 0 0 10px;
+}
+#sidebar label {
+  font-size: 0.82rem; color: #cbd5e1; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  padding: 3px 0; line-height: 1.3;
+}
+#sidebar label:hover { color: #f1f5f9; }
+#sidebar label small { color: #475569; font-size: 0.7rem; }
+#sidebar input[type="checkbox"] {
+  accent-color: #f97316; width: 13px; height: 13px;
+  flex-shrink: 0; cursor: pointer;
+}
+
+/* ==============================================
+   STATS BAR
+   ============================================== */
+.stats-bar {
+  display: flex; gap: 1px; background: #334155;
+  border-bottom: 1px solid #334155; flex-shrink: 0;
+}
+.stat {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; padding: 10px 4px; background: #1e293b; gap: 3px;
+}
+.stat-value {
+  font-size: 1.05rem; font-weight: 700; color: #f97316;
+  line-height: 1; font-variant-numeric: tabular-nums;
+}
+.stat-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; }
+
+/* ==============================================
+   RESET BUTTON
+   ============================================== */
+.reset-bar {
+  padding: 8px 16px;
+  border-bottom: 1px solid #334155;
+  display: flex; gap: 6px;
+}
+.reset-btn, .export-btn {
+  flex: 1; padding: 7px 6px;
+  border: none; border-radius: 6px;
+  font-size: 0.75rem; font-weight: 500; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.reset-btn {
+  background: #334155; color: #94a3b8;
+}
+.reset-btn:hover { background: #475569; color: #f1f5f9; }
+.export-btn {
+  background: #1e3a5f; color: #60a5fa;
+}
+.export-btn:hover { background: #1d4ed8; color: #fff; }
+
+/* ==============================================
+   TEXT INPUTS
+   ============================================== */
+#sidebar input[type="text"] {
+  width: 100%; padding: 7px 10px;
+  border: 1px solid #334155; border-radius: 6px;
+  background: #0f172a; color: #e2e8f0;
+  font-size: 0.82rem; outline: none; transition: border-color 0.15s;
+}
+#sidebar input[type="text"]:focus { border-color: #f97316; }
+#sidebar input[type="text"]::placeholder { color: #475569; }
+.input-wrap { position: relative; }
+.input-wrap input { padding-right: 28px; }
+.input-clear {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #64748b;
+  cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0 2px;
+}
+.input-clear:hover { color: #e2e8f0; }
+
+/* ==============================================
+   AUTOCOMPLETE
+   ============================================== */
+.suggestions {
+  margin-top: 4px; background: #0f172a;
+  border: 1px solid #334155; border-radius: 6px;
+  overflow: hidden; max-height: 200px; overflow-y: auto;
+}
+.suggestions:empty { display: none; }
+.suggestions div { padding: 7px 10px; font-size: 0.8rem; color: #cbd5e1; cursor: pointer; }
+.suggestions div:hover { background: #1e3a5f; color: #f1f5f9; }
+
+/* ==============================================
+   CHECKBOX GRID
+   ============================================== */
+.checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px; }
+
+/* ==============================================
+   FILTER BUTTONS
+   ============================================== */
+.filter-buttons { display: flex; gap: 6px; margin-bottom: 10px; }
+.filter-buttons button {
+  padding: 4px 10px; font-size: 0.71rem; font-weight: 500;
+  background: #334155; color: #94a3b8;
+  border: none; border-radius: 4px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.filter-buttons button:hover { background: #475569; color: #f1f5f9; }
+
+/* ==============================================
+   ERUPTION YEAR SLIDER
+   ============================================== */
+.slider-range-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 10px; font-size: 0.72rem;
+  color: #94a3b8; font-variant-numeric: tabular-nums;
+}
+.eruption-opts { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+
+/* noUiSlider dark-theme overrides */
+.noUi-target {
+  background: #334155 !important;
+  border: none !important;
+  box-shadow: none !important;
+  height: 5px !important;
+  border-radius: 3px !important;
+  margin: 12px 0 4px;
+}
+.noUi-connect { background: #f97316 !important; }
+.noUi-horizontal .noUi-handle {
+  width: 16px !important; height: 16px !important;
+  right: -8px !important; top: -6px !important;
+  background: #f1f5f9 !important;
+  border: 2px solid #f97316 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+  cursor: pointer;
+}
+.noUi-handle::before, .noUi-handle::after { display: none !important; }
+.noUi-tooltip {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f1f5f9 !important;
+  font-size: 0.68rem !important;
+  padding: 2px 5px !important;
+  border-radius: 4px !important;
+  bottom: 26px !important;
+}
+
+/* ==============================================
+   COLLAPSIBLE SECTIONS
+   ============================================== */
+.collapsible-section h3 {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none; margin-bottom: 0 !important;
+}
+.collapsible-section h3::after {
+  content: "▾"; font-size: 0.72rem; color: #64748b; transition: transform 0.2s;
+}
+.collapsible-section.collapsed h3::after { transform: rotate(-90deg); }
+.collapsible-body {
+  overflow: hidden; max-height: 500px; opacity: 1;
+  transition: max-height 0.25s ease, opacity 0.2s ease; margin-top: 10px;
+}
+.collapsible-section.collapsed .collapsible-body { max-height: 0; opacity: 0; }
+#volcano-type-filters { max-height: 210px; overflow-y: auto; padding-right: 4px; }
+#volcano-type-filters::-webkit-scrollbar        { width: 4px; }
+#volcano-type-filters::-webkit-scrollbar-track  { background: transparent; }
+#volcano-type-filters::-webkit-scrollbar-thumb  { background: #334155; border-radius: 2px; }
+
+/* ==============================================
+   MAP LEGEND CONTROL (floating overlay)
+   ============================================== */
+.map-legend {
+  background: rgba(15, 23, 42, 0.93);
+  backdrop-filter: blur(6px);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-width: 190px;
+  /* No overflow:hidden here — it was causing the toggle button to collapse with the body */
+}
+.legend-toggle {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; padding: 8px 12px;
+  background: #1e293b; border: none;
+  color: #cbd5e1; font-size: 0.76rem; font-weight: 600;
+  letter-spacing: 0.04em; cursor: pointer;
+  transition: background 0.15s;
+}
+.legend-toggle:hover { background: #334155; color: #f1f5f9; }
+.legend-toggle-icon { font-size: 0.7rem; color: #64748b; }
+
+.legend-body {
+  padding: 10px 12px 8px;
+  max-height: 400px;
+  overflow: hidden;
+  transition: max-height 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+.legend-body.legend-body-hidden {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+}
+
+.legend-cat {
+  font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #64748b; margin: 0 0 6px;
+}
+.legend-cat + .legend-cat,
+.legend-sizes + .legend-cat { margin-top: 10px; }
+
+.legend-list { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.legend-list li { display: flex; align-items: center; gap: 7px; font-size: 0.75rem; color: #cbd5e1; }
+.ldot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+.legend-sizes { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 2px; }
+.lsize { border-radius: 50%; background: #94a3b8; flex-shrink: 0; display: inline-block; }
+.lsize-sm    { width: 7px;  height: 7px; }
+.lsize-md    { width: 11px; height: 11px; }
+.lsize-lg    { width: 15px; height: 15px; }
+.lsize-label { font-size: 0.7rem; color: #94a3b8; }
+
+.legend-credit { font-size: 0.65rem; color: #475569; margin: 8px 0 0; }
+.legend-credit a { color: #64748b; text-decoration: none; }
+.legend-credit a:hover { color: #94a3b8; text-decoration: underline; }
+
+/* ==============================================
+   MAP AREA + ANALYTICS PANEL
+   ============================================== */
+#map-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+#map { flex: 1; min-height: 0; }
+
+/* Toggle bar */
+#chart-bar {
+  height: 34px;
+  background: #0f172a;
+  border-top: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  flex-shrink: 0;
+  position: relative;   /* own stacking context — never buried under map canvas */
+  z-index: 10;
+}
+#chart-toggle {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: 1px solid #334155;
+  color: #94a3b8; font-size: 0.75rem; font-weight: 600;
+  padding: 3px 10px; border-radius: 4px; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+#chart-toggle:hover { background: #1e293b; color: #f1f5f9; border-color: #475569; }
+#chart-arrow { font-size: 0.65rem; }
+#chart-subtitle { font-size: 0.68rem; color: #334155; }
+
+/* Chart panel (slides up) */
+#chart-panel {
+  background: #0f172a;
+  border-top: 1px solid #334155;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+  flex-shrink: 0;
+}
+#chart-panel.open { max-height: 290px; }
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  height: 290px;
+  box-sizing: border-box;
+}
+.chart-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chart-card h4 {
+  font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #64748b; margin: 0 0 8px; flex-shrink: 0;
+}
+.chart-wrap { flex: 1; position: relative; min-height: 0; }
+
+/* ==============================================
+   POPUP OVERRIDES
+   ============================================== */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important; border-radius: 10px !important;
+  overflow: hidden; box-shadow: 0 8px 28px rgba(0,0,0,0.4) !important;
+}
+.leaflet-popup-content { margin: 0 !important; width: auto !important; }
+
+.volcano-popup {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-width: 230px; max-width: 310px;
+}
+.popup-header {
+  background: #1e293b; padding: 12px 14px 9px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.popup-name { font-size: 0.97rem; font-weight: 700; color: #f1f5f9; line-height: 1.25; }
+.popup-badge {
+  font-size: 0.6rem; font-weight: 600; padding: 3px 7px;
+  border-radius: 12px; white-space: nowrap; flex-shrink: 0;
+  text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px;
+}
+.badge-holocene   { background: rgba(239,68,68,0.2);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+.badge-pleistocene{ background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.35); }
+.popup-type {
+  background: #0f172a; padding: 5px 14px;
+  font-size: 0.72rem; color: #94a3b8; font-style: italic;
+  border-bottom: 1px solid #334155;
+}
+.popup-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 0.8rem; }
+.popup-table tr:not(:last-child) td { border-bottom: 1px solid #f1f5f9; }
+.popup-key { padding: 6px 10px 6px 14px; color: #64748b; font-weight: 500; white-space: nowrap; vertical-align: top; width: 42%; }
+.popup-val { padding: 6px 14px 6px 0; color: #1e293b; vertical-align: top; line-height: 1.35; }
+.popup-summary {
+  background: #f8fafc; padding: 9px 14px;
+  font-size: 0.76rem; color: #475569; margin: 0; line-height: 1.55;
+  border-top: 1px solid #e2e8f0;
+}
+.popup-photo-link {
+  display: block; background: #0f172a; padding: 8px 14px;
+  font-size: 0.76rem; color: #f97316; text-decoration: none;
+  font-weight: 500; text-align: right; border-top: 1px solid #1e293b;
+  transition: background 0.15s;
+}
+.popup-photo-link:hover { background: #1e293b; color: #fb923c; }
+
+/* ==============================================
+   DESKTOP SIDEBAR COLLAPSE
+   ============================================== */
+
+/* #app needs relative positioning so the button can anchor to it */
+#app { position: relative; }
+
+/* Collapse toggle — anchored to #app, tracks sidebar right edge */
+#sidebar-collapse-btn {
+  position: absolute;
+  left: 290px; /* = sidebar width */
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 500;
+  width: 14px; height: 56px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  color: #64748b;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s, left 0.26s cubic-bezier(0.4,0,0.2,1);
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+}
+#sidebar-collapse-btn:hover { background: #334155; color: #f1f5f9; }
+
+/* Collapsed: shrink sidebar to ribbon, slide button left */
+#app.sidebar-collapsed #sidebar         { width: 38px; }
+#app.sidebar-collapsed #sidebar-collapse-btn { left: 38px; }
+
+/* Hide sidebar content when collapsed */
+#app.sidebar-collapsed #sidebar > *:not(#sidebar-ribbon-label) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Ribbon label — vertical "FILTERS" text shown when collapsed */
+#sidebar-ribbon-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  white-space: nowrap;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #475569;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+#app.sidebar-collapsed #sidebar-ribbon-label { opacity: 1; }
+
+/* Sidebar width transition — NO overflow:hidden here, it overrides overflow-y:auto and breaks scroll */
+#sidebar {
+  transition: width 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#sidebar > * { transition: opacity 0.15s ease; }
+
+/* ==============================================
+   RESET MAP VIEW BUTTON
+   ============================================== */
+.reset-view-btn {
+  width: 30px !important;
+  height: 30px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem !important;
+  cursor: pointer;
+  background: #fff;
+  color: #333;
+  border: none;
+  line-height: 1;
+}
+.reset-view-btn:hover { background: #f4f4f4; color: #000; }
+
+/* ==============================================
+   HAMBURGER BUTTON (mobile only)
+   ============================================== */
+#hamburger {
+  display: none; /* hidden on desktop */
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 1100;
+  width: 40px; height: 40px;
+  background: rgba(15,23,42,0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+#hamburger:hover { background: #1e293b; border-color: #475569; }
+
+#hamburger span {
+  display: block;
+  width: 18px; height: 2px;
+  background: #cbd5e1;
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.2s ease, width 0.2s ease;
+}
+
+/* Animate to × when active */
+#hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#hamburger.active span:nth-child(2) { opacity: 0; width: 0; }
+#hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ==============================================
+   SIDEBAR BACKDROP (mobile only)
+   ============================================== */
+#sidebar-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 1050;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;          /* CRITICAL: never intercept touches when hidden */
+  transition: opacity 0.25s ease;
+}
+#sidebar-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;          /* only catch touches when drawer is actually open */
+}
+
+/* ==============================================
+   MOBILE BREAKPOINT (≤ 768px)
+   ============================================== */
+@media (max-width: 768px) {
+
+  /* Show hamburger */
+  #hamburger { display: flex; }
+
+  /* Show backdrop when active */
+  #sidebar-backdrop { display: block; }
+
+  /* Sidebar becomes a fixed overlay drawer */
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 1060;
+    width: 300px;
+    max-width: 85vw;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+  #sidebar.drawer-open { transform: translateX(0); }
+
+  /* Map area takes full width */
+  #map-area { width: 100%; }
+
+  /* Stats bar — slightly larger tap targets */
+  .stat-value { font-size: 1.1rem; }
+
+  /* Chart panel: single column on mobile */
+  .chart-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  #chart-panel.open { max-height: 750px; }
+  .chart-card { height: 220px; }
+
+  /* Hide desktop collapse button on mobile — hamburger handles it */
+  #sidebar-collapse-btn { display: none; }
+  #sidebar-ribbon-label { display: none; }
+
+  /* Leaflet controls: shift right so they don't clash with hamburger (40px + 12px margin + 8px gap) */
+  .leaflet-top.leaflet-left { left: 62px; }
+
+  /* Legend: shift up slightly above chart bar */
+  .map-legend { margin-bottom: 4px; }
+
+  /* Hamburger: semi-transparent when drawer is open so it doesn't obscure the header */
+  #hamburger.active {
+    opacity: 0.55;
+    background: rgba(15, 23, 42, 0.7);
+  }
+}
+
+/* ==============================================
+   ABOUT MODAL
+   ============================================== */
+#about-modal {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#about-modal.visible { display: flex; }
+
+#about-panel {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+#about-panel::-webkit-scrollbar       { width: 5px; }
+#about-panel::-webkit-scrollbar-track { background: #1e293b; }
+#about-panel::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+.about-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #334155;
+  position: sticky; top: 0;
+  background: #1e293b;
+  z-index: 1;
+}
+.about-title {
+  font-size: 0.95rem; font-weight: 700;
+  color: #f1f5f9; letter-spacing: -0.01em;
+}
+#about-close {
+  background: none; border: none;
+  color: #64748b; font-size: 1.4rem; line-height: 1;
+  cursor: pointer; padding: 0 4px;
+  transition: color 0.15s;
+}
+#about-close:hover { color: #f1f5f9; }
+
+.about-body {
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.about-body p {
+  font-size: 0.85rem; color: #cbd5e1;
+  line-height: 1.65; margin: 0;
+}
+.about-body strong { color: #f1f5f9; }
+.about-body a { color: #f97316; text-decoration: none; }
+.about-body a:hover { text-decoration: underline; }
+
+.about-section {
+  border-top: 1px solid #334155;
+  padding-top: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.about-section h4 {
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #64748b; margin: 0;
+}
+
+.about-links {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.about-links a {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #334155; color: #cbd5e1 !important;
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 0.8rem; font-weight: 500;
+  text-decoration: none !important;
+  transition: background 0.15s, color 0.15s;
+}
+.about-links a:hover { background: #475569; color: #f1f5f9 !important; }
+
+.about-note {
+  font-size: 0.75rem !important;
+  color: #475569 !important;
+}

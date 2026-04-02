@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global Volcano Map</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Leaflet MarkerCluster -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <!-- noUiSlider -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p id="loading-msg">Loading volcano data…</p>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar backdrop -->
+  <div id="sidebar-backdrop"></div>
+
+  <!-- Mobile hamburger (floats over map) -->
+  <button type="button" id="hamburger" aria-label="Open filters">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div id="app">
+    <div id="sidebar">
+
+      <!-- Header -->
+      <div class="sidebar-header">
+        <div class="header-row">
+          <h1>Global Volcano Map</h1>
+          <div class="header-btns">
+            <button type="button" id="about-btn" title="About this tool">?</button>
+            <button type="button" id="copy-link-btn" title="Copy shareable link">
+              <span id="copy-link-icon">⎘</span>
+            </button>
+          </div>
+        </div>
+        <p class="subtitle">Data: Smithsonian Global Volcanism Program</p>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="stats-bar">
+        <div class="stat">
+          <span class="stat-value" id="stat-visible">—</span>
+          <span class="stat-label">Visible</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-holocene">—</span>
+          <span class="stat-label">Holocene</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-pleistocene">—</span>
+          <span class="stat-label">Pleistocene</span>
+        </div>
+      </div>
+
+      <!-- Reset / Export bar -->
+      <div class="reset-bar">
+        <button type="button" id="reset-filters" class="reset-btn">↺ Reset</button>
+        <button type="button" id="export-csv-btn" class="export-btn">⬇ Export CSV</button>
+      </div>
+
+      <!-- Name search -->
+      <section>
+        <h3>Search by Name</h3>
+        <input type="text" id="name-filter" placeholder="e.g. Kilauea, Etna, Fuji…" autocomplete="off" />
+      </section>
+
+      <!-- Geological period -->
+      <section>
+        <h3>Geological Period</h3>
+        <label>
+          <input type="checkbox" id="filter-holocene" checked>
+          Holocene <small>(last ~11,700 yrs)</small>
+        </label>
+        <label>
+          <input type="checkbox" id="filter-pleistocene" checked>
+          Pleistocene <small>(11,700 – 2.6M yrs)</small>
+        </label>
+      </section>
+
+      <!-- Country filter -->
+      <section>
+        <h3>Country</h3>
+        <div class="input-wrap">
+          <input type="text" id="country-filter" placeholder="Type a country name…" autocomplete="off" />
+          <button type="button" id="country-clear" class="input-clear" title="Clear">×</button>
+        </div>
+        <div id="country-suggestions" class="suggestions"></div>
+      </section>
+
+      <!-- Continent filter -->
+      <section>
+        <h3>Continent</h3>
+        <div class="filter-buttons">
+          <button type="button" id="continent-select-all">All</button>
+          <button type="button" id="continent-clear-all">None</button>
+        </div>
+        <div class="checkbox-grid">
+          <label><input type="checkbox" class="continent-filter" value="Africa" checked> Africa</label>
+          <label><input type="checkbox" class="continent-filter" value="Asia" checked> Asia</label>
+          <label><input type="checkbox" class="continent-filter" value="Europe" checked> Europe</label>
+          <label><input type="checkbox" class="continent-filter" value="North America" checked> N. America</label>
+          <label><input type="checkbox" class="continent-filter" value="South America" checked> S. America</label>
+          <label><input type="checkbox" class="continent-filter" value="Oceania" checked> Oceania</label>
+          <label><input type="checkbox" class="continent-filter" value="Antarctica" checked> Antarctica</label>
+        </div>
+      </section>
+
+      <!-- Eruption year filter -->
+      <section>
+        <h3>Last Eruption Year</h3>
+        <div id="eruption-slider"></div>
+        <div class="slider-range-labels">
+          <span id="eruption-min-label">0 CE</span>
+          <span id="eruption-max-label">2025</span>
+        </div>
+        <div class="eruption-opts">
+          <label>
+            <input type="checkbox" id="eruption-include-pre" checked>
+            Include pre-CE eruptions <small>(172 volcanoes)</small>
+          </label>
+          <label>
+            <input type="checkbox" id="eruption-include-unknown" checked>
+            Include unknown dates <small>(1,805 volcanoes)</small>
+          </label>
+        </div>
+      </section>
+
+      <!-- Volcano type filter (collapsible) -->
+      <section class="collapsible-section collapsed">
+        <h3 class="collapsible-header">Volcano Type</h3>
+        <div class="collapsible-body">
+          <div class="filter-buttons">
+            <button type="button" id="type-select-all">All</button>
+            <button type="button" id="type-clear-all">None</button>
+          </div>
+          <div id="volcano-type-filters"></div>
+        </div>
+      </section>
+
+      <span id="sidebar-ribbon-label">Filters</span>
+
+    </div>
+
+    <!-- Desktop sidebar collapse button (outside sidebar to avoid overflow clipping) -->
+    <button type="button" id="sidebar-collapse-btn" title="Collapse sidebar">‹</button>
+
+    <div id="map-area">
+      <div id="map"></div>
+
+      <!-- Analytics toggle bar -->
+      <div id="chart-bar">
+        <button id="chart-toggle" type="button">
+          <span id="chart-arrow">▲</span> Analytics
+        </button>
+        <span id="chart-subtitle">eruptions · types · elevation — updates with filters</span>
+      </div>
+
+      <!-- Analytics panel (slides up) -->
+      <div id="chart-panel">
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Eruptions by Decade</h4>
+            <div class="chart-wrap"><canvas id="chart-decades"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h4>Top Volcano Types</h4>
+            <div class="chart-wrap"><canvas id="chart-types"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h4>Top 8 by Elevation</h4>
+            <div class="chart-wrap"><canvas id="chart-elevation"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Leaflet MarkerCluster -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- noUiSlider -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+
+  <!-- About modal -->
+  <div id="about-modal" aria-modal="true" role="dialog" aria-label="About">
+    <div id="about-panel">
+      <div class="about-header">
+        <span class="about-title">About this tool</span>
+        <button type="button" id="about-close">×</button>
+      </div>
+      <div class="about-body">
+        <p>
+          The <strong>Global Volcano Map</strong> is an interactive open-source dashboard for
+          exploring and filtering the world's volcanoes. It visualises over 2,600 volcanoes
+          from the Holocene and Pleistocene epochs, with data on eruption history, elevation,
+          tectonic setting, rock type, and more.
+        </p>
+        <p>
+          Use the filter panel to narrow by continent, country, geological period, volcano type,
+          or eruption year range. The analytics panel charts eruption trends and type breakdowns
+          for whatever subset you've filtered. Any view can be shared as a permalink or exported
+          as a CSV.
+        </p>
+
+        <div class="about-section">
+          <h4>Data source</h4>
+          <p>
+            Volcano data is sourced from the
+            <a href="https://volcano.si.edu" target="_blank" rel="noopener">
+              Smithsonian Institution Global Volcanism Program (GVP)
+            </a>
+            — the authoritative global database of Holocene and Pleistocene volcanism.
+            This tool is an independent project and is not affiliated with or endorsed by
+            the Smithsonian Institution.
+          </p>
+        </div>
+
+        <div class="about-section">
+          <h4>Built by</h4>
+          <p>
+            Made by <strong>Ben Rayden</strong> — feel free to reach out or follow along:
+          </p>
+          <div class="about-links">
+            <a href="mailto:benrayden37@email.com" target="_blank" rel="noopener">✉ Email</a>
+            <a href="https://linkedin.com/in/benjamin-rayden" target="_blank" rel="noopener">in LinkedIn</a>
+            <a href="https://github.com/BenR37" target="_blank" rel="noopener">⌥ GitHub</a>
+          </div>
+          <p class="about-note">
+            Source code is open — contributions, issues, and forks are welcome. Contact: benrayden37@gmail.com
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
