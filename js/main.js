@@ -1116,6 +1116,9 @@ function setupMobileDrawer() {
 
   // Tap backdrop to close
   backdrop.addEventListener("click", closeDrawer);
+
+  // In-header close button (mobile only)
+  document.getElementById("sidebar-close-btn").addEventListener("click", closeDrawer);
 }
 
 // ================================================================
