@@ -483,12 +483,13 @@ function renderLayers() {
       const [lon, lat] = f.geometry.coordinates;
       const marker = L.marker([lat, lon], { icon: createVolcanoIcon(f, "holocene") });
       const html = volcanoPopup(f, "holocene");
+      // Desktop: bind popup normally — Leaflet handles open/close toggle itself
+      marker.bindPopup(html, { maxWidth: 320, autoPan: true });
+      // Mobile: intercept click, show bottom sheet instead
       marker.on("click", e => {
-        L.DomEvent.stopPropagation(e);
         if (window.innerWidth <= 768 && openBottomSheet) {
-          openBottomSheet(html);  // mobile: sheet only, no popup flash
-        } else {
-          marker.bindPopup(html, { maxWidth: 320, closeOnClick: false, autoPan: true }).openPopup();
+          L.DomEvent.stopPropagation(e);
+          openBottomSheet(html);
         }
       });
       holoceneCluster.addLayer(marker);
@@ -503,12 +504,11 @@ function renderLayers() {
       const [lon, lat] = f.geometry.coordinates;
       const marker = L.marker([lat, lon], { icon: createVolcanoIcon(f, "pleistocene") });
       const html = volcanoPopup(f, "pleistocene");
+      marker.bindPopup(html, { maxWidth: 320, autoPan: true });
       marker.on("click", e => {
-        L.DomEvent.stopPropagation(e);
         if (window.innerWidth <= 768 && openBottomSheet) {
-          openBottomSheet(html);  // mobile: sheet only, no popup flash
-        } else {
-          marker.bindPopup(html, { maxWidth: 320, closeOnClick: false, autoPan: true }).openPopup();
+          L.DomEvent.stopPropagation(e);
+          openBottomSheet(html);
         }
       });
       pleistoceneCluster.addLayer(marker);
