@@ -576,8 +576,8 @@ html, body {
   /* Show hamburger */
   #hamburger { display: flex; }
 
-  /* Show sidebar close button, styled as a pill */
-  #sidebar-close-btn {
+  /* Sidebar close button only shown when drawer is actually open */
+  #sidebar.drawer-open #sidebar-close-btn {
     display: flex;
     align-items: center;
     background: #334155;
@@ -591,7 +591,7 @@ html, body {
     white-space: nowrap;
     transition: background 0.15s, color 0.15s;
   }
-  #sidebar-close-btn:hover { background: #475569; color: #f1f5f9; }
+  #sidebar.drawer-open #sidebar-close-btn:hover { background: #475569; color: #f1f5f9; }
 
   /* Show backdrop when active */
   #sidebar-backdrop { display: block; }
