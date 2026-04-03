@@ -133,7 +133,9 @@ const COUNTRY_TO_CONTINENT = {
 };
 
 // --- MAP SETUP ---
-const map = L.map("map", { zoomControl: true }).setView([20, 0], 2);
+// tap: false        — disables Leaflet's custom tap handler (double-fires on some mobile browsers)
+// closePopupOnClick: false — prevents the ghost map-click from calling map.closePopup()
+const map = L.map("map", { zoomControl: true, tap: false, closePopupOnClick: false }).setView([20, 0], 2);
 
 const darkMatter = L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -204,22 +206,18 @@ function markerDiameter(elevation) {
   return 16;                          // > 5000 m — very high peaks
 }
 
-// L.divIcon circle — fully compatible with MarkerCluster
-function createVolcanoIcon(feature, period) {
-  const color  = eruptionColor(feature);
-  const size   = markerDiameter(feature.properties.Elevation);
-  const border = period === "holocene"
-    ? "rgba(255,255,255,0.55)"
-    : "rgba(148,163,184,0.25)";
-  const opacity = period === "holocene" ? 1 : 0.6;
+// L.divIcon circle — period distinction removed from visuals (surfaced via filter panel + popup badge)
+function createVolcanoIcon(feature, _period) {
+  const color = eruptionColor(feature);
+  const size  = markerDiameter(feature.properties.Elevation);
 
   return L.divIcon({
     html: `<div style="
       width:${size}px;height:${size}px;
       border-radius:50%;
       background:${color};
-      border:1.5px solid ${border};
-      opacity:${opacity};
+      border:1.5px solid rgba(255,255,255,0.45);
+      opacity:1;
       box-shadow:0 1px 4px rgba(0,0,0,0.4);
     "></div>`,
     className: "",
@@ -229,31 +227,40 @@ function createVolcanoIcon(feature, period) {
   });
 }
 
-// MarkerClusterGroup factory — separate colours per period
-function createClusterGroup(period) {
-  const bg = period === "holocene"
-    ? "rgba(239,68,68,0.9)"
-    : "rgba(59,130,246,0.9)";
-
+// MarkerClusterGroup factory — neutral style (clusters are navigation aids, not data)
+function createClusterGroup(_period) {
   return L.markerClusterGroup({
     chunkedLoading: true,
     maxClusterRadius: 50,
     disableClusteringAtZoom: 7,
     iconCreateFunction(cluster) {
       const count = cluster.getChildCount();
-      const size  = count < 10 ? 26 : count < 50 ? 34 : count < 200 ? 42 : 50;
-      const fs    = size < 34 ? 10 : 11;
+      const size  = count < 10 ? 28 : count < 50 ? 36 : count < 200 ? 44 : 52;
+      const fs    = size < 36 ? 10 : 11;
       return L.divIcon({
-        html: `<div style="
-          width:${size}px;height:${size}px;
-          border-radius:50%;
-          background:${bg};
-          border:2px solid rgba(255,255,255,0.3);
-          display:flex;align-items:center;justify-content:center;
-          color:#fff;font-weight:700;font-size:${fs}px;
-          font-family:system-ui,sans-serif;
-          box-shadow:0 2px 8px rgba(0,0,0,0.45);
-        ">${count}</div>`,
+        html: `
+          <div title="${count.toLocaleString()} volcanoes — zoom in to explore" style="
+            position:relative;
+            width:${size}px;height:${size}px;
+          ">
+            <div style="
+              position:absolute;
+              inset:-5px;
+              border-radius:50%;
+              background:rgba(148,163,184,0.15);
+              border:1px solid rgba(148,163,184,0.25);
+            "></div>
+            <div style="
+              position:absolute;inset:0;
+              border-radius:50%;
+              background:rgba(30,41,59,0.92);
+              border:1.5px solid rgba(148,163,184,0.5);
+              display:flex;align-items:center;justify-content:center;
+              color:#e2e8f0;font-weight:700;font-size:${fs}px;
+              font-family:system-ui,sans-serif;
+              box-shadow:0 2px 10px rgba(0,0,0,0.5);
+            ">${count}</div>
+          </div>`,
         className: "",
         iconSize:   [size, size],
         iconAnchor: [size / 2, size / 2],
@@ -475,7 +482,15 @@ function renderLayers() {
     filteredH.forEach(f => {
       const [lon, lat] = f.geometry.coordinates;
       const marker = L.marker([lat, lon], { icon: createVolcanoIcon(f, "holocene") });
-      marker.bindPopup(volcanoPopup(f, "holocene"), { maxWidth: 320 });
+      const html = volcanoPopup(f, "holocene");
+      marker.on("click", e => {
+        L.DomEvent.stopPropagation(e);
+        if (window.innerWidth <= 768 && openBottomSheet) {
+          openBottomSheet(html);  // mobile: sheet only, no popup flash
+        } else {
+          marker.bindPopup(html, { maxWidth: 320, closeOnClick: false, autoPan: true }).openPopup();
+        }
+      });
       holoceneCluster.addLayer(marker);
     });
     holoceneCluster.addTo(map);
@@ -487,7 +502,15 @@ function renderLayers() {
     filteredP.forEach(f => {
       const [lon, lat] = f.geometry.coordinates;
       const marker = L.marker([lat, lon], { icon: createVolcanoIcon(f, "pleistocene") });
-      marker.bindPopup(volcanoPopup(f, "pleistocene"), { maxWidth: 320 });
+      const html = volcanoPopup(f, "pleistocene");
+      marker.on("click", e => {
+        L.DomEvent.stopPropagation(e);
+        if (window.innerWidth <= 768 && openBottomSheet) {
+          openBottomSheet(html);  // mobile: sheet only, no popup flash
+        } else {
+          marker.bindPopup(html, { maxWidth: 320, closeOnClick: false, autoPan: true }).openPopup();
+        }
+      });
       pleistoceneCluster.addLayer(marker);
     });
     pleistoceneCluster.addTo(map);
@@ -838,11 +861,6 @@ function addLegendControl() {
           <span class="lsize lsize-md"></span><span class="lsize-label">500–1,500 m</span>
           <span class="lsize lsize-lg"></span><span class="lsize-label">&gt;1,500 m</span>
         </div>
-        <p class="legend-cat">Period</p>
-        <ul class="legend-list">
-          <li><span class="ldot" style="background:#ef4444;border:1.5px solid rgba(255,255,255,0.5)"></span>Holocene (bright)</li>
-          <li><span class="ldot" style="background:#94a3b8;opacity:0.55"></span>Pleistocene (muted)</li>
-        </ul>
         <p class="legend-credit">
           Data: <a href="https://volcano.si.edu" target="_blank" rel="noopener">Smithsonian GVP</a>
         </p>
@@ -1006,6 +1024,47 @@ function addResetViewControl() {
 }
 
 // ================================================================
+// MOBILE BOTTOM SHEET (replaces floating popup on mobile)
+// ================================================================
+// Exposed so renderLayers can call openBottomSheet directly on mobile
+let openBottomSheet = null;
+
+function setupBottomSheet() {
+  const sheet    = document.getElementById("bottom-sheet");
+  const content  = document.getElementById("bottom-sheet-content");
+  const titleEl  = document.getElementById("bottom-sheet-title");
+  const closeBtn = document.getElementById("bottom-sheet-close");
+  const dragZone = document.getElementById("bottom-sheet-drag-zone");
+
+  function openSheet(html) {
+    content.innerHTML = html;
+    const nameEl = content.querySelector(".popup-name");
+    titleEl.textContent = nameEl ? nameEl.textContent : "";
+    const popupHeader = content.querySelector(".popup-header");
+    if (popupHeader) popupHeader.style.display = "none";
+    sheet.classList.add("open");
+  }
+
+  function closeSheet() {
+    sheet.classList.remove("open");
+    content.innerHTML = "";
+    titleEl.textContent = "";
+  }
+
+  // Expose so renderLayers can use it
+  openBottomSheet = openSheet;
+
+  // Tap handle or close button to dismiss — no drag needed
+  dragZone.addEventListener("click", closeSheet);
+  closeBtn.addEventListener("click", closeSheet);
+
+  // Close when user pans the map
+  map.on("dragstart", () => {
+    if (window.innerWidth <= 768) closeSheet();
+  });
+}
+
+// ================================================================
 // ABOUT MODAL
 // ================================================================
 function setupAboutModal() {
@@ -1139,6 +1198,7 @@ setupEventListeners();
 setupCopyLink();
 setupExportButton();
 setupAboutModal();
+setupBottomSheet();
 setupSidebarCollapse();
 setupMobileDrawer();
 addLegendControl();

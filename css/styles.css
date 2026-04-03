@@ -616,6 +616,91 @@ html, body {
 }
 
 /* ==============================================
+   MOBILE BOTTOM SHEET
+   ============================================== */
+#bottom-sheet {
+  display: none; /* JS shows only on mobile */
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 1200;
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+#bottom-sheet.open { transform: translateY(0); }
+
+/* Drag zone — tap anywhere on the handle bar to close */
+#bottom-sheet-drag-zone {
+  padding: 10px 0 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#bottom-sheet-drag-zone:active { opacity: 0.6; }
+
+#bottom-sheet-handle {
+  width: 36px; height: 4px;
+  background: #475569;
+  border-radius: 2px;
+}
+
+/* Header row: volcano name + close button */
+#bottom-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 10px;
+  border-bottom: 1px solid #334155;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+#bottom-sheet-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.3;
+  flex: 1;
+}
+
+#bottom-sheet-close {
+  background: #334155;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+#bottom-sheet-close:hover { background: #475569; color: #f1f5f9; }
+
+#bottom-sheet-content {
+  padding: 0 0 20px;
+  overflow-y: auto;
+}
+
+/* Inside the sheet — hide the redundant popup header (name shown in sheet header instead) */
+#bottom-sheet-content .volcano-popup { max-width: 100%; }
+#bottom-sheet-content .popup-type    { padding-left: 16px; }
+
+@media (max-width: 768px) {
+  #bottom-sheet { display: flex; flex-direction: column; }
+}
+
+/* ==============================================
    ABOUT MODAL
    ============================================== */
 #about-modal {
